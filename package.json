@@ -3,14 +3,11 @@
   "version": "1.0.0",
   "description": "Zoho CRM sync API",
   "type": "module",
-  "main": "api/syncZoho.js",
   "scripts": {
     "dev": "node api/syncZoho.js"
   },
   "dependencies": {
-    "node-fetch": "^3.3.2",
-    "request": "^2.88.2",
-    "zoho": "^1.0.0"
+    "node-fetch": "^3.3.2"
   },
   "author": "Gaurav Singh",
   "license": "ISC"
