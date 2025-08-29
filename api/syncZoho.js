@@ -1,8 +1,7 @@
-export default async function handler(req, res) {
-  // your Zoho sync logic here
-  const request = require('request');
+import fetch from 'node-fetch';
 
-// Helper to chunk array into batches
+console.log("🔄 Zoho sync started at", new Date().toISOString());
+
 function chunkArray(array, size) {
   const chunks = [];
   for (let i = 0; i < array.length; i += size) {
@@ -11,19 +10,12 @@ function chunkArray(array, size) {
   return chunks;
 }
 
-// Fetch listings
-const options = {
-  method: 'GET',
-  url: 'https://car-app-puce-one.vercel.app/listings',
-  headers: {}
-};
-
-request(options, function (error, response) {
-  if (error) throw new Error(error);
-
+async function runSync() {
   try {
-    const data = JSON.parse(response.body);
-    console.log("Total listings:", data.length);
+    const response = await fetch('https://car-app-puce-one.vercel.app/listings');
+    const data = await response.json();
+
+    console.log("📦 Total listings fetched:", data.length);
 
     const now = new Date();
     const oneDayAgo = new Date();
@@ -62,13 +54,8 @@ request(options, function (error, response) {
           Source_URL: item["Source URL"],
           Main_Image: item["mainImage"],
           Listing_Date: itemDate.toISOString().split('T')[0],
-          Options: Array.isArray(item["Options list"])
-            ? item["Options list"].join(", ")
-            : ""
-            ,
-          Images: Array.isArray(item["images"])
-            ? item["images"].join(", ")
-            : ""
+          Options: Array.isArray(item["Options list"]) ? item["Options list"].join(", ") : "",
+          Images: Array.isArray(item["images"]) ? item["images"].join(", ") : ""
         };
 
         zohoPayloads.push(mapped);
@@ -77,30 +64,28 @@ request(options, function (error, response) {
 
     console.log(`✅ Prepared ${zohoPayloads.length} listings for Zoho CRM`);
 
-    // Batch and send to Zoho
-    const batches = chunkArray(zohoPayloads, 50); // Adjust batch size if needed
+    const batches = chunkArray(zohoPayloads, 50);
 
-    batches.forEach((batch, index) => {
-      const postOptions = {
+    for (let i = 0; i < batches.length; i++) {
+      const batch = batches[i];
+      const zohoResponse = await fetch('https://www.zohoapis.eu/crm/v7/functions/getmongodb_data/actions/execute?auth_type=apikey&zapikey=1003.b5548ba22119b0ba123c552679cd05ed.6c1cc7eba1040e39975ca3adf0986fa6', {
         method: 'POST',
-        url: 'https://www.zohoapis.eu/crm/v7/functions/getmongodb_data/actions/execute?auth_type=apikey&zapikey=1003.b5548ba22119b0ba123c552679cd05ed.6c1cc7eba1040e39975ca3adf0986fa6',
         headers: {
           'Content-Type': 'application/json',
           'Cookie': '_zcsr_tmp=4c5ddb36-bc5c-4e32-a63c-f6d2c50eb13f; crmcsr=4c5ddb36-bc5c-4e32-a63c-f6d2c50eb13f'
         },
         body: JSON.stringify({ data: batch })
-      };
-
-      request(postOptions, function (error, response) {
-        if (error) throw new Error(error);
-        console.log(`📦 Batch ${index + 1} response:`, response.body);
       });
-    });
+
+      const result = await zohoResponse.text();
+      console.log(`📤 Batch ${i + 1} response:`, result);
+    }
+
+    console.log("✅ Sync complete. Total listings synced:", zohoPayloads.length);
 
   } catch (err) {
-    console.error("Failed to process response:", err.message);
+    console.error("❌ Sync failed:", err.message);
   }
-});
-
-  res.status(200).json({ message: "Sync complete" });
 }
+
+runSync();
