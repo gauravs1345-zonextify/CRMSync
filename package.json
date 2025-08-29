@@ -1,14 +1,15 @@
 {
-  "name": "widget",
+  "name": "my-app",
   "version": "1.0.0",
   "description": "Zoho CRM sync API",
   "type": "module",
   "scripts": {
     "dev": "node api/syncZoho.js"
   },
+  "keywords": [],
+  "author": "Gaurav Singh",
+  "license": "ISC",
   "dependencies": {
     "node-fetch": "^3.3.2"
-  },
-  "author": "Gaurav Singh",
-  "license": "ISC"
+  }
 }
