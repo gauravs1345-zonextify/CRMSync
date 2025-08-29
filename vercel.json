@@ -1,0 +1,9 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "api/syncZoho.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/sync", "dest": "/api/syncZoho.js" }
+  ]
+}

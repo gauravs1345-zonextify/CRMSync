@@ -1,0 +1,10 @@
+{
+  "scripts": {
+  "start": "node server.js"
+}
+,
+  "dependencies": {
+    "request": "^2.88.2",
+    "zoho": "^1.0.0"
+  }
+}
